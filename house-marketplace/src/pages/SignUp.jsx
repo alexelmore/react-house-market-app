@@ -5,6 +5,7 @@ import {
   createUserWithEmailAndPassword,
   updateProfile,
 } from "firebase/auth";
+import { doc, setDoc, serverTimestamp } from "firebase/firestore";
 import { db } from "../firebase.config";
 import { ReactComponent as ArrowRightIcon } from "../assets/svg/keyboardArrowRightIcon.svg";
 import visibilityIcon from "../assets/svg/visibilityIcon.svg";
@@ -34,6 +35,7 @@ function SignUp() {
   // onSubmit function to handle form submissions
   const onSubmit = async (e) => {
     e.preventDefault();
+    // Authenticate user with firestore db
     try {
       const auth = getAuth();
       const userCredential = await createUserWithEmailAndPassword(
@@ -46,6 +48,13 @@ function SignUp() {
         displayName: name,
       });
 
+      // After user is authenticated, add them to firestore db
+      const formDataCopy = { ...formData };
+      delete formDataCopy.password;
+      formDataCopy.timestamp = serverTimestamp();
+      await setDoc(doc(db, "users", user.uid), formDataCopy);
+
+      // After user is added to firestore db, re-direct to the home page
       navigate("/");
     } catch (error) {
       console.log(error.message);
