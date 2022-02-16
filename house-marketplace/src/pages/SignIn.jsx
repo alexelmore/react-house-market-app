@@ -3,6 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { getAuth, signInWithEmailAndPassword } from "firebase/auth";
 import { ReactComponent as ArrowRightIcon } from "../assets/svg/keyboardArrowRightIcon.svg";
 import visibilityIcon from "../assets/svg/visibilityIcon.svg";
+import { toast } from "react-toastify";
 function SignIn() {
   // Component level state
   const [showPassword, setShowPassword] = useState(false);
@@ -43,6 +44,7 @@ function SignIn() {
       }
     } catch (error) {
       console.log(error.message);
+      toast.error("Invalid User Credentials");
     }
   };
 
