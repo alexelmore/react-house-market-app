@@ -82,7 +82,7 @@ function Profile() {
               setChangeDetails((prevState) => !prevState);
             }}
           >
-            {changeDetails ? "Done" : "Edit"}
+            {changeDetails ? "Done" : "Change User Name"}
           </p>
         </div>
         <div className="profileCard">
