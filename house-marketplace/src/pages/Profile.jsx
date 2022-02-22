@@ -7,6 +7,16 @@ import { toast } from "react-toastify";
 
 function Profile() {
   const auth = getAuth();
+  // Const for memeber registration date
+  const memberRegistrationDate = auth.currentUser.metadata.creationTime.slice(
+    0,
+    -13
+  );
+  // Const for last time member was logged in
+  const lastTimeLoggedIn = auth.currentUser.metadata.lastSignInTime.slice(
+    0,
+    -13
+  );
 
   // State for changing profile details
   const [changeDetails, setChangeDetails] = useState(false);
@@ -85,7 +95,16 @@ function Profile() {
               value={name}
               onChange={onChange}
             />
-            <p>Email: {email}</p>
+            <p>
+              <strong>Member Since:</strong> {memberRegistrationDate}
+            </p>
+
+            <p>
+              <strong>Last Time Logged In:</strong> {lastTimeLoggedIn}
+            </p>
+            <p>
+              <strong>Email:</strong> {email}
+            </p>
           </form>
         </div>
       </main>
