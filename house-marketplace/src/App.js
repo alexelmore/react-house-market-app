@@ -9,6 +9,7 @@ import Profile from "./pages/Profile";
 import Offers from "./pages/Offers";
 import NotFound from "./pages/NotFound";
 import Navbar from "./components/Navbar";
+import PrivateRoute from "./components/PrivateRoute";
 function App() {
   return (
     <>
@@ -17,7 +18,9 @@ function App() {
         <Routes>
           <Route path="/" element={<Explore />}></Route>
           <Route path="/offers" element={<Offers />}></Route>
-          <Route path="/profile" element={<Profile />}></Route>
+          <Route path="/profile" element={<PrivateRoute />}>
+            <Route path="/profile" element={<Profile />} />
+          </Route>
           <Route path="/sign-in" element={<SignIn />}></Route>
           <Route path="/sign-up" element={<SignUp />}></Route>
           <Route path="/forgot-password" element={<ForgotPassword />}></Route>
