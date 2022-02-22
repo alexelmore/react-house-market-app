@@ -85,6 +85,7 @@ function Profile() {
               value={name}
               onChange={onChange}
             />
+            <p>Email: {email}</p>
           </form>
         </div>
       </main>
