@@ -1,5 +1,5 @@
 function Category() {
-  return <div>Category</div>;
+  return <div>Category Page</div>;
 }
 
 export default Category;
