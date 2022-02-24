@@ -54,7 +54,7 @@ function CreateListing() {
   } = formData;
 
   // Component Geolocation Option State
-  const [geolocationEnabled, setGeolocationEnabled] = useState(false);
+  const [geolocationEnabled, setGeolocationEnabled] = useState(true);
 
   /* End Of Component Level State */
 
@@ -88,7 +88,31 @@ function CreateListing() {
 
   // onMute Function
   const onMutate = (e) => {
-    console.log("fired from mutate");
+    // boolean variable set to null
+    let boolean = null;
+
+    // Check if value is true string,if so, set boolean variable to true
+    if (e.target.value === "true") {
+      boolean = true;
+    }
+
+    // Check if value is a false string value,if so, set boolean variable to false
+    if (e.target.value === "false") {
+      boolean = false;
+    }
+
+    // Check if value is a file
+    if (e.target.files) {
+      setFormData((prevState) => ({ ...prevState, images: e.target.files }));
+    }
+
+    // If value is not a file, continue into the following if conditional
+    if (!e.target.files) {
+      setFormData((prevState) => ({
+        ...prevState,
+        [e.target.id]: boolean ?? e.target.value,
+      }));
+    }
   };
 
   // If loading state is true, enable the Spinner component
