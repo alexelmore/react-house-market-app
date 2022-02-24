@@ -81,9 +81,35 @@ function CreateListing() {
   }, [isMounted]);
 
   // onSubmit Function to handle form submission
-  const onSubmit = (e) => {
+  const onSubmit = async (e) => {
     e.preventDefault();
-    console.log("fired from submit");
+    setLoading(true);
+    if (discountedPrice >= regularPrice) {
+      setLoading(false);
+      toast.error("Discounted price should be lower than regular price");
+      return;
+    }
+    if (images.length > 6) {
+      setLoading(false);
+      toast.error("You can a max of 6 image uploads");
+    }
+
+    // Geolocation and location variables
+    let geolocation = {};
+    let location;
+
+    if (geolocationEnabled) {
+      const response = await fetch(
+        `https://maps.googleapis.com/maps/api/geocode/json?address=${address}&key=AIzaSyAxZuO2FCLMZu20ZDLCbSW4zEPyJQnQ8lA`
+      );
+      const data = await response.json();
+      console.log(data);
+    } else {
+      geolocation.lat = latitude;
+      geolocation.lng = longitude;
+      location = address;
+    }
+    setLoading(false);
   };
 
   // onMute Function
