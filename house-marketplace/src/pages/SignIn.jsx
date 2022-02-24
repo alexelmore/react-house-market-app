@@ -55,49 +55,52 @@ function SignIn() {
         <header>
           <p className="pageHeader">Welcome Back!</p>
         </header>
-        <main>
-          <form onSubmit={onSubmit}>
+
+        <form onSubmit={onSubmit}>
+          <input
+            type="email"
+            className="emailInput"
+            placeholder="Email"
+            id="email"
+            value={email}
+            onChange={onChange}
+          />
+
+          <div className="passwordInputDiv">
             <input
-              type="email"
-              className="emailInput"
-              placeholder="Email"
-              id="email"
-              value={email}
+              type={showPassword ? "text" : "password"}
+              className="passwordInput"
+              placeholder="Password"
+              id="password"
+              value={password}
               onChange={onChange}
             />
-            <div className="passwordInputDiv">
-              <input
-                className="passwordInput"
-                type={showPassword ? "text" : "password"}
-                placeholder="Password"
-                id="password"
-                onChange={onChange}
-                value={password}
-              />
-              <img
-                src={visibilityIcon}
-                alt="show password"
-                className="showPassword"
-                onClick={() => setShowPassword((prev) => !prev)}
-              />
-            </div>
 
-            <Link to="/forgot-password" className="forgotPasswordLink">
-              Forgot Password
-            </Link>
+            <img
+              src={visibilityIcon}
+              alt="show password"
+              className="showPassword"
+              onClick={() => setShowPassword((prevState) => !prevState)}
+            />
+          </div>
 
-            <div className="signInBar">
-              <p className="signInText">Sign In</p>
-              <button className="signInButton">
-                <ArrowRightIcon fill="#ffffff" width="34px" height="34px" />
-              </button>
-            </div>
-          </form>
-          <OAuth />
-          <Link to="/sign-up" className="registerLink">
-            Sign Up Instead
+          <Link to="/forgot-password" className="forgotPasswordLink">
+            Forgot Password
           </Link>
-        </main>
+
+          <div className="signInBar">
+            <p className="signInText">Sign In</p>
+            <button className="signInButton">
+              <ArrowRightIcon fill="#ffffff" width="34px" height="34px" />
+            </button>
+          </div>
+        </form>
+
+        <OAuth />
+
+        <Link to="/sign-up" className="registerLink">
+          Sign Up Instead
+        </Link>
       </div>
     </>
   );
