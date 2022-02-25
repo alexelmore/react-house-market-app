@@ -14,6 +14,7 @@ import { v4 as uuidv4 } from "uuid";
 import Spinner from "../components/Spinner";
 
 function CreateListing() {
+  /* Component Level State */
   // eslint-disable-next-line
   const [geolocationEnabled, setGeolocationEnabled] = useState(true);
   const [loading, setLoading] = useState(false);
@@ -32,7 +33,9 @@ function CreateListing() {
     latitude: 0,
     longitude: 0,
   });
+  /* End of Component Level State  */
 
+  // Destructure properties from formData Object and make them constants
   const {
     type,
     name,
@@ -49,10 +52,12 @@ function CreateListing() {
     longitude,
   } = formData;
 
+  // Init getAuth,useNavigate and useRef
   const auth = getAuth();
   const navigate = useNavigate();
   const isMounted = useRef(true);
 
+  // useEffect hook to check if there is a user on page load
   useEffect(() => {
     if (isMounted) {
       onAuthStateChanged(auth, (user) => {
@@ -63,43 +68,51 @@ function CreateListing() {
         }
       });
     }
-
+    // Cleanup function to prevent memory leaks
     return () => {
       isMounted.current = false;
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isMounted]);
 
+  // Onsubmit function to handle form submissions
   const onSubmit = async (e) => {
     e.preventDefault();
-
     setLoading(true);
 
+    // Check discounted price v regular price
     if (discountedPrice >= regularPrice) {
       setLoading(false);
       toast.error("Discounted price needs to be less than regular price");
       return;
     }
 
+    // Cap image upload capacity to a max amount of six images
     if (images.length > 6) {
       setLoading(false);
       toast.error("Max 6 images");
       return;
     }
 
+    // Init geolocation and location variables
     let geolocation = {};
     let location;
 
+    // If geolocation enabled, send request to google geocoding
     if (geolocationEnabled) {
+      // Await response from Google's geocoding API
       const response = await fetch(
         `https://maps.googleapis.com/maps/api/geocode/json?address=${address}&key=${process.env.REACT_APP_GEOCODE_API_KEY}`
       );
 
+      // Await and init data returned by from response
       const data = await response.json();
 
+      // Set lat and lng properties to lat and lng properties returned back from data object
       geolocation.lat = data.results[0]?.geometry.location.lat ?? 0;
       geolocation.lng = data.results[0]?.geometry.location.lng ?? 0;
 
+      // Init location variable with response data
       location =
         data.status === "ZERO_RESULTS"
           ? undefined
@@ -110,7 +123,9 @@ function CreateListing() {
         toast.error("Please enter a correct address");
         return;
       }
-    } else {
+    }
+    // If geolocation is not enabled, set lat and lng to the form values entered in by the user for latitude and longitude.
+    else {
       geolocation.lat = latitude;
       geolocation.lng = longitude;
     }
@@ -118,13 +133,13 @@ function CreateListing() {
     // Store image in firebase
     const storeImage = async (image) => {
       return new Promise((resolve, reject) => {
+        // Setup for uploading images to Firebase db
         const storage = getStorage();
         const fileName = `${auth.currentUser.uid}-${image.name}-${uuidv4()}`;
-
         const storageRef = ref(storage, "images/" + fileName);
-
         const uploadTask = uploadBytesResumable(storageRef, image);
 
+        // Firbase function that uloaded image filese
         uploadTask.on(
           "state_changed",
           (snapshot) => {
@@ -156,6 +171,7 @@ function CreateListing() {
       });
     };
 
+    // Const the contains the images to be uploaded
     const imgUrls = await Promise.all(
       [...images].map((image) => storeImage(image))
     ).catch(() => {
@@ -164,6 +180,7 @@ function CreateListing() {
       return;
     });
 
+    // Object that we submit to the Firebase DB
     const formDataCopy = {
       ...formData,
       imgUrls,
@@ -171,20 +188,27 @@ function CreateListing() {
       timestamp: serverTimestamp(),
     };
 
+    // Conditionally Configure the property values in the formDataCopy object
     formDataCopy.location = address;
     delete formDataCopy.images;
     delete formDataCopy.address;
     !formDataCopy.offer && delete formDataCopy.discountedPrice;
 
+    // After configuring the formDataCopy object, save it to the Firbase DB
     const docRef = await addDoc(collection(db, "listings"), formDataCopy);
+
+    // After listing is saved to the DB, set loading to false, display success message to the user and navigate the user to the necessary category based on whether their listing is of type "rent" or is of type "sale"
     setLoading(false);
     toast.success("Listing saved");
     navigate(`/category/${formDataCopy.type}/${docRef.id}`);
   };
 
+  // Function that reacts to form input changes made by the user
   const onMutate = (e) => {
+    // boolean variable set to null
     let boolean = null;
 
+    // Check if value is string and then set boolean variable accordingly
     if (e.target.value === "true") {
       boolean = true;
     }
@@ -192,7 +216,7 @@ function CreateListing() {
       boolean = false;
     }
 
-    // Files
+    // Check if value is of type file
     if (e.target.files) {
       setFormData((prevState) => ({
         ...prevState,
@@ -200,7 +224,7 @@ function CreateListing() {
       }));
     }
 
-    // Text/Booleans/Numbers
+    // If value is not of type file
     if (!e.target.files) {
       setFormData((prevState) => ({
         ...prevState,
