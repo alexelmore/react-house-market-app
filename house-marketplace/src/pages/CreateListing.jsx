@@ -14,12 +14,9 @@ import { v4 as uuidv4 } from "uuid";
 import Spinner from "../components/Spinner";
 
 function CreateListing() {
-  /* Component Level State */
-
-  // Component Loading State
+  // eslint-disable-next-line
+  const [geolocationEnabled, setGeolocationEnabled] = useState(true);
   const [loading, setLoading] = useState(false);
-
-  // Component Form State
   const [formData, setFormData] = useState({
     type: "rent",
     name: "",
@@ -36,7 +33,6 @@ function CreateListing() {
     longitude: 0,
   });
 
-  // Destructure and pull out all the properties in setFormData object
   const {
     type,
     name,
@@ -53,17 +49,10 @@ function CreateListing() {
     longitude,
   } = formData;
 
-  // Component Geolocation Option State
-  const [geolocationEnabled, setGeolocationEnabled] = useState(true);
-
-  /* End Of Component Level State */
-
-  // Init getAuth, navigate and isMounted constants
   const auth = getAuth();
   const navigate = useNavigate();
   const isMounted = useRef(true);
 
-  // useEffect hook to check for a user on page load
   useEffect(() => {
     if (isMounted) {
       onAuthStateChanged(auth, (user) => {
@@ -75,26 +64,29 @@ function CreateListing() {
       });
     }
 
-    // Return cleanup function for memory leak
-    return (isMounted.current = false);
+    return () => {
+      isMounted.current = false;
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isMounted]);
 
-  // onSubmit Function to handle form submission
   const onSubmit = async (e) => {
     e.preventDefault();
+
     setLoading(true);
+
     if (discountedPrice >= regularPrice) {
       setLoading(false);
-      toast.error("Discounted price should be lower than regular price");
+      toast.error("Discounted price needs to be less than regular price");
       return;
     }
+
     if (images.length > 6) {
       setLoading(false);
-      toast.error("You can a max of 6 image uploads");
+      toast.error("Max 6 images");
+      return;
     }
 
-    // Geolocation and location variables
     let geolocation = {};
     let location;
 
@@ -102,14 +94,16 @@ function CreateListing() {
       const response = await fetch(
         `https://maps.googleapis.com/maps/api/geocode/json?address=${address}&key=${process.env.REACT_APP_GEOCODE_API_KEY}`
       );
+
       const data = await response.json();
-      const { results } = data;
-      geolocation.lat = results[0].geometry.location.lat ?? 0;
-      geolocation.lng = results[0].geometry.location.lng ?? 0;
+
+      geolocation.lat = data.results[0]?.geometry.location.lat ?? 0;
+      geolocation.lng = data.results[0]?.geometry.location.lng ?? 0;
+
       location =
         data.status === "ZERO_RESULTS"
           ? undefined
-          : results[0]?.formatted_address;
+          : data.results[0]?.formatted_address;
 
       if (location === undefined || location.includes("undefined")) {
         setLoading(false);
@@ -120,30 +114,93 @@ function CreateListing() {
       geolocation.lat = latitude;
       geolocation.lng = longitude;
     }
+
+    // Store image in firebase
+    const storeImage = async (image) => {
+      return new Promise((resolve, reject) => {
+        const storage = getStorage();
+        const fileName = `${auth.currentUser.uid}-${image.name}-${uuidv4()}`;
+
+        const storageRef = ref(storage, "images/" + fileName);
+
+        const uploadTask = uploadBytesResumable(storageRef, image);
+
+        uploadTask.on(
+          "state_changed",
+          (snapshot) => {
+            const progress =
+              (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
+            console.log("Upload is " + progress + "% done");
+            switch (snapshot.state) {
+              case "paused":
+                console.log("Upload is paused");
+                break;
+              case "running":
+                console.log("Upload is running");
+                break;
+              default:
+                break;
+            }
+          },
+          (error) => {
+            reject(error);
+          },
+          () => {
+            // Handle successful uploads on complete
+            // For instance, get the download URL: https://firebasestorage.googleapis.com/...
+            getDownloadURL(uploadTask.snapshot.ref).then((downloadURL) => {
+              resolve(downloadURL);
+            });
+          }
+        );
+      });
+    };
+
+    const imgUrls = await Promise.all(
+      [...images].map((image) => storeImage(image))
+    ).catch(() => {
+      setLoading(false);
+      toast.error("Images not uploaded");
+      return;
+    });
+
+    const formDataCopy = {
+      ...formData,
+      imgUrls,
+      geolocation,
+      timestamp: serverTimestamp(),
+    };
+
+    formDataCopy.location = address;
+    delete formDataCopy.images;
+    delete formDataCopy.address;
+    !formDataCopy.offer && delete formDataCopy.discountedPrice;
+
+    const docRef = await addDoc(collection(db, "listings"), formDataCopy);
     setLoading(false);
+    toast.success("Listing saved");
+    navigate(`/category/${formDataCopy.type}/${docRef.id}`);
   };
 
-  // onMute Function
   const onMutate = (e) => {
-    // boolean variable set to null
     let boolean = null;
 
-    // Check if value is true string,if so, set boolean variable to true
     if (e.target.value === "true") {
       boolean = true;
     }
-
-    // Check if value is a false string value,if so, set boolean variable to false
     if (e.target.value === "false") {
       boolean = false;
     }
 
-    // Check if value is a file
+    // Files
     if (e.target.files) {
-      setFormData((prevState) => ({ ...prevState, images: e.target.files }));
+      setFormData((prevState) => ({
+        ...prevState,
+        images: e.target.files,
+      }));
     }
 
-    // If value is not a file, continue into the following if conditional
+    // Text/Booleans/Numbers
     if (!e.target.files) {
       setFormData((prevState) => ({
         ...prevState,
@@ -152,10 +209,10 @@ function CreateListing() {
     }
   };
 
-  // If loading state is true, enable the Spinner component
   if (loading) {
     return <Spinner />;
   }
+
   return (
     <div className="profile">
       <header>
