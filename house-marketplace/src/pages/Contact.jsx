@@ -11,21 +11,23 @@ function Contact() {
   // eslint-disable-next-line
   const [searchParams, setSearchParams] = useSearchParams();
 
-  // Init useParams hook
+  // Init useParams hook to get the landlord id in the URL
   const params = useParams();
 
-  // useEffect hook to get landlord id on page load
+  // useEffect hook to get the user and the landlord id on page load
   useEffect(() => {
     const getLandlord = async () => {
       // Setup user document and create a db snapshot
       const docRef = doc(db, "users", params.landlordId);
       const docSnap = await getDoc(docRef);
+      // If document snapshot exists, set landlord to its data property, else throw an error
       if (docSnap.exists()) {
         setLandlord(docSnap.data());
       } else {
         toast.error("Could not get landlord data");
       }
     };
+    // Call function on page load
     getLandlord();
   }, [params.landlordId]);
 
