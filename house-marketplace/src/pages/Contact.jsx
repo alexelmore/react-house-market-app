@@ -42,7 +42,12 @@ function Contact() {
       {landlord !== null && (
         <main>
           <div className="contactLandlord">
-            <p className="landlordName">Contact {landlord?.name}</p>
+            <p className="landlordName">
+              Contact User Name:{" "}
+              <strong>
+                <u>{landlord?.name}</u>
+              </strong>
+            </p>
           </div>
 
           <form className="messageForm">
